@@ -3,179 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Trắc Nghiệm Công Nghệ 11</title>
+    <title>Kiểm tra Công nghệ 11</title>
     <style>
-        :root { --primary: #2563eb; --success: #16a34a; --error: #dc2626; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
-        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .header { text-align: center; border-bottom: 2px solid #e2e8f0; margin-bottom: 25px; padding-bottom: 15px; }
-        .section-header { background: #f8fafc; border-left: 4px solid var(--primary); padding: 10px 15px; margin: 25px 0 15px; font-weight: bold; color: var(--primary); }
-        .question-item { margin-bottom: 20px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
-        
-        /* Style cho các option */
-        .option-label { display: flex; align-items: center; padding: 12px; border: 1px solid #f1f5f9; border-radius: 8px; cursor: pointer; margin: 5px 0; transition: 0.2s; }
-        .option-label:hover { background: #f8fafc; border-color: var(--primary); }
-        input { width: 18px; height: 18px; margin-right: 12px; }
-
-        /* Style cho phần Review */
-        .review-q-item { margin-bottom: 30px; padding: 20px; border-radius: 12px; border: 2px solid #eee; }
-        .review-opt { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #eee; font-size: 0.95rem; }
-        .opt-correct { background-color: #dcfce7; border-color: #22c55e; color: #14532d; font-weight: 500; } /* Highlight xanh cho đáp án đúng */
-        .opt-wrong-choice { background-color: #fee2e2; border-color: #ef4444; color: #7f1d1d; } /* Highlight đỏ cho lựa chọn sai */
-        
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
-        .status-true { background: var(--success); color: white; }
-        .status-false { background: var(--error); color: white; }
-
-        .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .result-box { display: none; text-align: center; }
-        .score-val { font-size: 4rem; color: var(--primary); font-weight: bold; margin: 10px 0; }
+        :root { --p: #2563eb; --s: #16a34a; --e: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 10px; margin: 0; }
+        .timer-bar { position: fixed; top: 0; left: 0; width: 100%; background: #1e293b; color: #fbbf24; text-align: center; padding: 10px 0; font-size: 1.2rem; font-weight: bold; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .container { max-width: 800px; margin: 60px auto 20px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .q-box { margin-bottom: 25px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .opt { display: flex; align-items: center; padding: 10px; border: 1px solid #f1f5f9; margin: 5px 0; border-radius: 5px; cursor: pointer; }
+        .opt:hover { background: #f8fafc; }
+        input { margin-right: 12px; transform: scale(1.2); }
+        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        .res-area { display: none; text-align: center; }
+        .correct { color: var(--s); font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div class="timer-bar" id="timer">THỜI GIAN CÒN LẠI: 15:00</div>
+
 <div class="container">
-    <div id="quiz-area">
-        <div class="header">
-            <h2>KIỂM TRA CÔNG NGHỆ 11</h2>
-            <p>Phần I: 12 câu (Trộn 6A + 6B) | Phần II: 4 câu (P2)</p>
-        </div>
-        <div id="quiz-container"></div>
-        <button class="btn-submit" onclick="grade()">NỘP BÀI KIỂM TRA</button>
+    <div id="quiz-ui">
+        <h2 style="text-align:center">BÀI KIỂM TRA ĐỊNH KỲ</h2>
+        <div id="content"></div>
+        <button class="btn" onclick="grade()">NỘP BÀI</button>
     </div>
 
-    <div id="result-area" class="result-box">
-        <h2>KẾT QUẢ BÀI LÀM</h2>
-        <div class="score-val" id="score-display">0/10</div>
-        <p id="stats-display" style="font-size: 1.2rem; margin-bottom: 20px;"></p>
-        <button onclick="location.reload()" style="padding:12px 25px; cursor:pointer; background: #64748b; color: white; border:none; border-radius: 6px;">Làm đề khác</button>
-        <div class="section-header" style="text-align: left; margin-top: 40px;">XEM LẠI CHI TIẾT ĐÁP ÁN</div>
-        <div id="review-list" style="text-align: left;"></div>
+    <div id="res-ui" class="res-area">
+        <h1 id="score" style="font-size: 3rem; color: var(--p);">0/10</h1>
+        <p id="stats"></p>
+        <button onclick="location.reload()" style="padding:10px 20px; cursor:pointer">Làm đề mới</button>
+        <div id="review" style="text-align:left; margin-top:20px; border-top:1px solid #eee"></div>
     </div>
 </div>
 
 <script>
-// Dữ liệu ngân hàng câu hỏi (Giữ nguyên như cũ)
-const BANK_A = [
-    {q: "Vai trò của cơ khí chế tạo trong giao thông vận tải là gì?", a: ["Máy MRI", "Tưới tự động", "Động cơ ô tô, xe máy", "Máy xay lúa"], c: "Mg=="},
-    {q: "Ai trực tiếp lắp đặt động cơ vào khung xe?", a: ["Công nhân lắp ráp", "Giám đốc", "Kỹ sư thiết kế", "Bảo vệ"], c: "MA=="},
-    {q: "Tính chất hoá học của vật liệu cơ khí là?", a: ["Tính cứng", "Dẫn điện", "Dẫn nhiệt", "Chịu ăn mòn"], c: "Mw=="},
-    {q: "Khả năng chống lại biến dạng dẻo hoặc phá hủy gọi là?", a: ["Tính dẫn nhiệt", "Tính đúc", "Độ bền", "Khối lượng riêng"], c: "Mg=="},
-    {q: "Vật liệu nhớ được hình dạng ban đầu?", a: ["Cơ tính biến thiên", "Nano", "Hợp kim nhớ hình", "Kim loại"], c: "Mg=="},
-    {q: "Phương pháp gia công có phoi là?", a: ["Tiện", "Đúc", "Rèn", "Hàn"], c: "MA=="},
-    {q: "Ưu điểm của phương pháp hàn?", a: ["Kém bền", "Hở", "Cong vênh", "Tiết kiệm kim loại"], c: "Mw=="},
-    {q: "Trên máy tiện, chi tiết gắn dao là?", a: ["Mâm cặp", "Ụ động", "Bàn gá dao", "Hộp tốc độ"], c: "Mg=="},
-    {q: "Trình tự sản xuất cơ khí đúng?", a: ["Phôi -> Gia công -> Xử lý -> Lắp ráp -> Đóng gói", "Gia công -> Phôi -> Kiểm tra", "Lắp ráp -> Gia công", "Phôi -> Lắp ráp -> Đóng gói"], c: "MA=="},
-    {q: "Hoạt động 'Xử lý và bảo vệ bề mặt' gồm?", a: ["Tiện, phay", "Đúc, rèn", "Sơn, mạ, phủ hóa chất", "Lắp bu lông"], c: "Mg=="}
+// DỮ LIỆU GỐC TỪ FILE (ĐÃ MÃ HÓA ĐÁP ÁN)
+const DATA_A = [
+    {q: "Vai trò của cơ khí chế tạo trong ngành giao thông vận tải được thể hiện qua sản phẩm nào?", a: ["Máy chụp cộng hưởng từ (MRI)", "Hệ thống tưới tiêu tự động", "Động cơ ô tô, xe máy", "Máy xay xát lúa gạo"], c: "Mg=="},
+    {q: "Trong một dây chuyền sản xuất ô tô, ai là người trực tiếp lắp đặt động cơ vào khung xe?", a: ["Công nhân lắp ráp cơ khí", "Giám đốc nhà máy", "Kỹ sư thiết kế kiểu dáng xe", "Nhân viên bảo vệ nhà máy"], c: "MA=="},
+    {q: "Một trong những tính chất hoá học của vật liệu cơ khí là", a: ["tính cứng", "tính dẫn điện", "tính dẫn nhiệt", "tính chịu ăn mòn"], c: "Mw=="},
+    {q: "Tính chất nào sau đây đặc trưng cho khả năng chống lại biến dạng dẻo hay phá hủy của kim loại dưới tác dụng của ngoại lực?", a: ["Tính dẫn nhiệt", "Tính đúc", "Độ bền (tính bền)", "Khối lượng riêng"], c: "Mg=="},
+    {q: "Vật liệu nào có thể ghi nhớ được hình dạng ban đầu của nó?", a: ["Vật liệu có cơ tính biến thiên", "Nano", "Hợp kim nhớ hình", "Vật liệu kim loại và hợp kim"], c: "Mg=="},
+    {q: "Phương pháp nào sau đây thuộc nhóm “Gia công có phoi” (gia công cắt gọt)?", a: ["Tiện", "Đúc", "Rèn", "Hàn"], c: "MA=="},
+    {q: "Ưu điểm của công nghệ chế tạo phôi bằng phương pháp hàn?", a: ["Mối hàn kém bền", "Mối hàn hở", "Dễ cong vênh", "Tiết kiệm kim loại"], c: "Mw=="},
+    {q: "Trên máy tiện vạn năng, chi tiết gắn dao khi tiện là", a: ["mâm cặp", "ụ động", "bàn gá dao", "hộp tốc độ"], c: "Mg=="},
+    {q: "Sắp xếp các giai đoạn sau đúng với trình tự của quá trình sản xuất cơ khí?", a: ["Chế tạo phôi -> Gia công -> xử lí và bảo vệ -> lắp ráp -> đóng gói", "Gia công -> chế tạo phôi -> kiểm tra -> lắp ráp -> đóng gói", "Gia công -> chế tạo phôi -> lắp ráp -> kiểm tra -> đóng gói", "Chế tạo phôi -> Gia công -> lắp ráp -> kiểm tra -> đóng gói"], c: "MA=="},
+    {q: "Bước “Xử lý và bảo vệ bề mặt” bao gồm các hoạt động nào sau đây?", a: ["Tiện, phay, bào, khoan", "Đúc, rèn, dập", "Sơn, mạ, phủ hóa chất chống ăn mòn", "Lắp ráp bu lông, đai ốc"], c: "Mg=="},
+    {q: "Robot công nghiệp là thiết bị tự động có khả năng gì nổi bật nhất?", a: ["Tự động suy nghĩ như con người", "Thực hiện các thao tác theo chương trình được lập trình sẵn", "Di chuyển với tốc độ ánh sáng", "Tự sửa chữa khi bị hỏng hóc"], c: "MQ=="},
+    {q: "Một dây chuyền đóng gói thực phẩm tự động sử dụng robot để xếp thùng carton lên pallet. Đây là ứng dụng của robot trong công đoạn nào?", a: ["Gia công", "Lắp ráp", "Kiểm tra", "Vận chuyển và xếp dỡ"], c: "Mw=="}
 ];
 
-const BANK_B = [
-    {q: "Gia công cơ khí là quá trình gì?", a: ["Chế tạo sản phẩm cơ khí", "Nghiên cứu thông số", "Tổ hợp chi tiết", "Bảo dưỡng máy"], c: "MA=="},
-    {q: "Gang là hợp kim của sắt và carbon với hàm lượng carbon?", a: ["Dưới 2.14%", "Trên 2.14%", "Bằng 0.1%", "Trên 6.67%"], c: "MQ=="},
-    {q: "Đặc điểm của nhựa nhiệt dẻo?", a: ["Không tái sinh", "Nóng chảy ở nhiệt độ thấp, tái sinh được", "Dẫn điện tốt", "Rất nặng"], c: "MQ=="},
-    {q: "Thép carbon thấp có tính chất gì?", a: ["Rất giòn", "Dẻo, dai nhưng độ cứng thấp", "Không thể rèn", "Dẫn nhiệt kém"], c: "MQ=="},
-    {q: "Phương pháp đúc là gì?", a: ["Rót kim loại lỏng vào khuôn", "Dùng ngoại lực ép kim loại", "Cắt bỏ lớp kim loại thừa", "Nối các chi tiết bằng nhiệt"], c: "MA=="},
-    {q: "Sản phẩm của gia công không phoi có đặc điểm?", a: ["Độ bóng cực cao", "Kích thước thô, cần gia công lại", "Luôn có hình trụ", "Rất nặng"], c: "MQ=="},
-    {q: "Nghề nghiệp thiết kế cơ khí yêu cầu trình độ?", a: ["Sơ cấp", "Trung cấp", "Đại học trở lên", "Không cần bằng cấp"], c: "Mg=="},
-    {q: "Vật liệu Nano có kích thước khoảng?", a: ["1 đến 100 nm", "1 đến 100 mm", "1 đến 100 cm", "1 m"], c: "MA=="}
+const DATA_B = [
+    {q: "Nghề nghiệp trong lĩnh vực cơ khí gắn với những công việc nào? Chọn đáp án đúng nhất", a: ["Thiết kế sản phẩm cơ khí; Gia công cơ khí; Bảo dưỡng thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Gia công cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng và sửa chữa thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng và sửa chữa thiết bị cơ khí"], c: "Mg=="},
+    {q: "Nghề nghiệp trong lĩnh vực cơ khí không bao gồm công việc nào dưới đây?", a: ["Thiết kế sản phẩm cơ khí", "Gia công cơ khí", "Lắp ráp sản phẩm cơ khí", "Lên kế hoạch kinh doanh sản phẩm cơ khí"], c: "Mw=="},
+    {q: "Gia công cơ khí là gì?", a: ["là quá trình chế tạo sản phẩm cơ khí", "là quá trình nghiên cứu, thiết kế tính toán kích thước", "là giai đoạn cuối cùng của quá trình sản xuất", "là công việc chăm sóc, thực hiện kiểm tra"], c: "MA=="},
+    {q: "Phân loại theo công nghệ gia công gồm:", a: ["Gia công cơ khí không phoi và gia công cơ khí có phoi", "Gia công cơ khí không phoi và gia công cơ khí truyền thống", "Gia công cơ khí truyền thống và gia công cơ khí có phoi", "Gia công cơ khí truyền thống và gia công cơ khí hiện đại"], c: "MA=="},
+    {q: "Gia công cơ khí không phoi là quá trình", a: ["Gia công bằng tia lửa điện", "Gia công mà có một lượng vật liệu bị cắt gọt bỏ đi", "Gia công mà khối lượng vật liệu vẫn được giữ nguyên", "Gia công bằng siêu âm"], c: "Mg=="},
+    {q: "Gia công cơ khí có phoi là quá trình", a: ["Gia công bằng tia lửa điện", "Gia công mà có một lượng vật liệu bị cắt gọt bỏ đi", "Gia công mà khối lượng vật liệu vẫn được giữ nguyên", "Gia công bằng siêu âm"], c: "MQ=="}
+    // ... Bạn có thể thêm tiếp các câu khác từ 11OT1B vào mảng này
 ];
 
-const BANK_P2 = [
-    {q: "Các phương pháp gia công không phoi bao gồm?", a: ["Đúc", "Tiện", "Rèn", "Hàn"], c: "WzAsIDIsIDNd"},
-    {q: "Vật liệu kim loại bao gồm các loại nào sau đây?", a: ["Gang", "Thép", "Đồng", "Nhựa"], c: "WzAsIDEsIDJd"},
-    {q: "Các tính chất của vật liệu cơ khí bao gồm?", a: ["Tính chất cơ học", "Tính chất vật lý", "Tính chất hóa học", "Tính chất tâm linh"], c: "WzAsIDEsIDJd"},
-    {q: "Các loại máy công cụ phổ biến trong cơ khí là?", a: ["Máy tiện", "Máy phay", "Máy khoan", "Máy in văn phòng"], c: "WzAsIDEsIDJd"}
+const DATA_P2 = [
+    {q: "Các phương pháp gia công không phoi bao gồm:", a: ["Đúc", "Tiện", "Rèn", "Hàn"], c: "WzAsIDIsIDNd"},
+    {q: "Vật liệu kim loại màu gồm những loại nào?", a: ["Đồng", "Thép", "Nhôm", "Nhựa"], c: "WzAsIDJd"},
+    {q: "Các tính chất của vật liệu cơ khí gồm:", a: ["Cơ học", "Vật lý", "Hóa học", "Tâm linh"], c: "WzAsIDEsIDJd"},
+    {q: "Thông số cơ bản của quá trình cắt gọt:", a: ["Vận tốc cắt", "Lượng chạy dao", "Chiều sâu cắt", "Màu sắc dao"], c: "WzAsIDEsIDJd"}
 ];
 
-let currentExam = [];
-const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+let exam = [];
+let t = 15 * 60;
+let timer;
 
-function init() {
-    const subA = shuffle([...BANK_A]).slice(0, 6);
-    const subB = shuffle([...BANK_B]).slice(0, 6);
-    const subP2 = shuffle([...BANK_P2]).slice(0, 4);
-    const part1 = shuffle([...subA, ...subB]);
-    const combined = [...part1, ...subP2];
-
-    currentExam = combined.map(item => {
-        const decodedCorrect = JSON.parse(atob(item.c));
-        const isMulti = Array.isArray(decodedCorrect);
-        let opts = item.a.map((txt, i) => ({
-            text: txt,
-            isCorrect: isMulti ? decodedCorrect.includes(i) : i === decodedCorrect
-        }));
-        return { title: item.q, type: isMulti ? 'multi' : 'single', options: shuffle(opts) };
-    });
-    render();
+function startTimer() {
+    timer = setInterval(() => {
+        t--;
+        let m = Math.floor(t/60), s = t%60;
+        document.getElementById('timer').innerText = `THỜI GIAN CÒN LẠI: ${m}:${s<10?'0':''}${s}`;
+        if(t<=0) { clearInterval(timer); grade(); }
+    }, 1000);
 }
 
-function render() {
-    let html = '';
-    currentExam.forEach((q, i) => {
-        if(i === 0) html += `<div class="section-header">PHẦN I: TRẮC NGHIỆM 1 ĐÁP ÁN</div>`;
-        if(i === 12) html += `<div class="section-header">PHẦN II: TRẮC NGHIỆM NHIỀU ĐÁP ÁN</div>`;
-        html += `<div class="question-item">
-            <p><strong>Câu ${i+1}: ${q.title}</strong></p>
+function init() {
+    // 6 câu A, 6 câu B, 4 câu P2 - Tuyệt đối không thay đổi tỉ lệ
+    const sA = DATA_A.sort(() => 0.5-Math.random()).slice(0, 6);
+    const sB = DATA_B.sort(() => 0.5-Math.random()).slice(0, 6);
+    const sP2 = DATA_P2.sort(() => 0.5-Math.random()).slice(0, 4);
+
+    exam = [...sA, ...sB, ...sP2].map(item => {
+        const cDec = JSON.parse(atob(item.c));
+        const isM = Array.isArray(cDec);
+        let opts = item.a.map((txt, i) => ({ txt, isC: isM ? cDec.includes(i) : i === cDec }));
+        opts.sort(() => 0.5 - Math.random()); // Trộn đáp án
+        return { q: item.q, type: isM ? 'multi' : 'single', options: opts };
+    });
+
+    document.getElementById('content').innerHTML = exam.map((q, i) => `
+        <div class="q-box">
+            <p><strong>Câu ${i+1}:</strong> ${q.q}</p>
             ${q.options.map((o, oi) => `
-                <label class="option-label">
+                <label class="opt">
                     <input type="${q.type==='single'?'radio':'checkbox'}" name="q${i}" value="${oi}">
-                    ${o.text}
+                    ${o.txt}
                 </label>
             `).join('')}
-        </div>`;
-    });
-    document.getElementById('quiz-container').innerHTML = html;
+        </div>
+    `).join('');
+    startTimer();
 }
 
 function grade() {
-    let score = 0;
-    let reviewHtml = '';
-
-    currentExam.forEach((q, i) => {
-        const selected = Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map(el => parseInt(el.value));
-        const correctIdxs = q.options.map((o, idx) => o.isCorrect ? idx : null).filter(v => v !== null);
-
-        let isRight = (q.type === 'single') 
-            ? (selected.length === 1 && q.options[selected[0]].isCorrect)
-            : (selected.length > 0 && selected.length === correctIdxs.length && selected.every(v => correctIdxs.includes(v)));
-
-        if(isRight) score++;
-
-        // Tạo giao diện Review cho từng câu
-        reviewHtml += `<div class="review-q-item" style="border-color: ${isRight ? '#dcfce7' : '#fee2e2'}">
-            <span class="status-badge ${isRight ? 'status-true' : 'status-false'}">
-                ${isRight ? 'ĐÚNG' : 'SAI'}
-            </span>
-            <p><strong>Câu ${i+1}: ${q.title}</strong></p>
-            <div>
-                ${q.options.map((opt, optIdx) => {
-                    let className = 'review-opt';
-                    let marker = '';
-                    
-                    if (opt.isCorrect) {
-                        className += ' opt-correct'; // Luôn highlight xanh đáp án đúng
-                        marker = ' (Đáp án đúng)';
-                    }
-                    if (selected.includes(optIdx) && !opt.isCorrect) {
-                        className += ' opt-wrong-choice'; // Highlight đỏ nếu học sinh chọn sai
-                        marker = ' (Lựa chọn của bạn - Sai)';
-                    }
-                    if (selected.includes(optIdx) && opt.isCorrect) {
-                        marker = ' (Lựa chọn của bạn - Đúng)';
-                    }
-
-                    return `<div class="${className}">${opt.text} ${marker}</div>`;
-                }).join('')}
-            </div>
-        </div>`;
+    clearInterval(timer);
+    let correct = 0;
+    let rev = '';
+    exam.forEach((q, i) => {
+        const sel = Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map(e => parseInt(e.value));
+        const ans = q.options.map((o, oi) => o.isC ? oi : null).filter(v => v !== null);
+        let ok = (q.type==='single') ? (sel.length===1 && q.options[sel[0]].isC) : (JSON.stringify(sel.sort())===JSON.stringify(ans.sort()));
+        if(ok) correct++;
+        rev += `<p>Câu ${i+1}: ${ok?'✅':'❌'} - Đáp án: <span class="correct">${ans.map(idx => q.options[idx].txt).join('; ')}</span></p>`;
     });
-
-    const finalScore = (score / currentExam.length) * 10;
-    document.getElementById('quiz-area').style.display = 'none';
-    document.getElementById('result-area').style.display = 'block';
-    document.getElementById('score-display').innerText = finalScore.toFixed(1) + "/10";
-    document.getElementById('stats-display').innerText = `Kết quả: Đúng ${score} câu trên tổng số ${currentExam.length} câu.`;
-    document.getElementById('review-list').innerHTML = reviewHtml;
+    document.getElementById('quiz-ui').style.display = 'none';
+    document.getElementById('res-ui').style.display = 'block';
+    document.getElementById('score').innerText = ((correct/16)*10).toFixed(1) + "/10";
+    document.getElementById('stats').innerText = `Đúng ${correct}/16 câu`;
+    document.getElementById('review').innerHTML = rev;
     window.scrollTo(0,0);
 }
 
