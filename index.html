@@ -7,15 +7,23 @@
     <style>
         :root { --p: #2563eb; --s: #16a34a; --e: #dc2626; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 10px; margin: 0; }
-        .timer-bar { position: fixed; top: 0; left: 0; width: 100%; background: #1e293b; color: #fbbf24; text-align: center; padding: 10px 0; font-size: 1.2rem; font-weight: bold; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .container { max-width: 800px; margin: 60px auto 20px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .q-box { margin-bottom: 25px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .opt { display: flex; align-items: center; padding: 10px; border: 1px solid #f1f5f9; margin: 5px 0; border-radius: 5px; cursor: pointer; }
-        .opt:hover { background: #f8fafc; }
-        input { margin-right: 12px; transform: scale(1.2); }
-        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        .res-area { display: none; text-align: center; }
-        .correct { color: var(--s); font-weight: bold; }
+        .timer-bar { position: fixed; top: 0; left: 0; width: 100%; background: #1e293b; color: #fbbf24; text-align: center; padding: 12px 0; font-size: 1.3rem; font-weight: bold; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .container { max-width: 850px; margin: 80px auto 40px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .section-header { background: #eff6ff; color: var(--p); padding: 15px; border-radius: 8px; margin: 30px 0 20px; border-left: 6px solid var(--p); font-size: 1.2rem; font-weight: bold; text-transform: uppercase; }
+        .q-box { margin-bottom: 30px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+        .opt { display: flex; align-items: center; padding: 12px; border: 1px solid #f1f5f9; margin: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .opt:hover { background: #f8fafc; border-color: var(--p); }
+        input { margin-right: 15px; transform: scale(1.3); cursor: pointer; }
+        .btn { width: 100%; padding: 20px; background: var(--p); color: white; border: none; border-radius: 10px; font-size: 1.3rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+        
+        /* Kết quả */
+        .res-area { display: none; }
+        .score-card { text-align: center; padding: 40px; border-radius: 15px; background: #f0fdf4; border: 2px solid var(--s); margin-bottom: 30px; }
+        .score-num { font-size: 4rem; color: var(--p); font-weight: 800; margin: 10px 0; }
+        .review-q { border-bottom: 2px solid #eee; padding: 20px 0; }
+        .correct-ans { color: var(--s); font-weight: bold; background: #f0fdf4; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px; }
+        .wrong-tag { color: var(--e); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -24,22 +32,27 @@
 
 <div class="container">
     <div id="quiz-ui">
-        <h2 style="text-align:center">BÀI KIỂM TRA ĐỊNH KỲ</h2>
+        <h1 style="text-align:center; color: #1e293b;">BÀI KIỂM TRA ĐỊNH KỲ CÔNG NGHỆ 11</h1>
         <div id="content"></div>
-        <button class="btn" onclick="grade()">NỘP BÀI</button>
+        <button class="btn" id="submit-btn" onclick="grade()">NỘP BÀI KIỂM TRA</button>
     </div>
 
     <div id="res-ui" class="res-area">
-        <h1 id="score" style="font-size: 3rem; color: var(--p);">0/10</h1>
-        <p id="stats"></p>
-        <button onclick="location.reload()" style="padding:10px 20px; cursor:pointer">Làm đề mới</button>
-        <div id="review" style="text-align:left; margin-top:20px; border-top:1px solid #eee"></div>
+        <div class="score-card">
+            <h2>KẾT QUẢ CỦA BẠN</h2>
+            <div class="score-num" id="score-val">0/10</div>
+            <p id="stats-val" style="font-size: 1.2rem;"></p>
+            <button onclick="location.reload()" style="padding:10px 25px; cursor:pointer; border-radius:8px; border:1px solid #ccc; background: white;">Làm đề mới</button>
+        </div>
+
+        <h2 style="border-bottom: 2px solid var(--p); padding-bottom: 10px;">XEM LẠI CHI TIẾT CÂU HỎI</h2>
+        <div id="review-list"></div>
     </div>
 </div>
 
 <script>
-// DỮ LIỆU GỐC TỪ FILE (ĐÃ MÃ HÓA ĐÁP ÁN)
-const DATA_A = [
+// --- DỮ LIỆU ĐÃ MÃ HÓA BASE64 ĐỂ BẢO MẬT ---
+const BANK_A = [
     {q: "Vai trò của cơ khí chế tạo trong ngành giao thông vận tải được thể hiện qua sản phẩm nào?", a: ["Máy chụp cộng hưởng từ (MRI)", "Hệ thống tưới tiêu tự động", "Động cơ ô tô, xe máy", "Máy xay xát lúa gạo"], c: "Mg=="},
     {q: "Trong một dây chuyền sản xuất ô tô, ai là người trực tiếp lắp đặt động cơ vào khung xe?", a: ["Công nhân lắp ráp cơ khí", "Giám đốc nhà máy", "Kỹ sư thiết kế kiểu dáng xe", "Nhân viên bảo vệ nhà máy"], c: "MA=="},
     {q: "Một trong những tính chất hoá học của vật liệu cơ khí là", a: ["tính cứng", "tính dẫn điện", "tính dẫn nhiệt", "tính chịu ăn mòn"], c: "Mw=="},
@@ -54,52 +67,57 @@ const DATA_A = [
     {q: "Một dây chuyền đóng gói thực phẩm tự động sử dụng robot để xếp thùng carton lên pallet. Đây là ứng dụng của robot trong công đoạn nào?", a: ["Gia công", "Lắp ráp", "Kiểm tra", "Vận chuyển và xếp dỡ"], c: "Mw=="}
 ];
 
-const DATA_B = [
+const BANK_B = [
     {q: "Nghề nghiệp trong lĩnh vực cơ khí gắn với những công việc nào? Chọn đáp án đúng nhất", a: ["Thiết kế sản phẩm cơ khí; Gia công cơ khí; Bảo dưỡng thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Gia công cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng và sửa chữa thiết bị cơ khí", "Thiết kế sản phẩm cơ khí; Lắp ráp sản phẩm cơ khí; Bảo dưỡng và sửa chữa thiết bị cơ khí"], c: "Mg=="},
     {q: "Nghề nghiệp trong lĩnh vực cơ khí không bao gồm công việc nào dưới đây?", a: ["Thiết kế sản phẩm cơ khí", "Gia công cơ khí", "Lắp ráp sản phẩm cơ khí", "Lên kế hoạch kinh doanh sản phẩm cơ khí"], c: "Mw=="},
     {q: "Gia công cơ khí là gì?", a: ["là quá trình chế tạo sản phẩm cơ khí", "là quá trình nghiên cứu, thiết kế tính toán kích thước", "là giai đoạn cuối cùng của quá trình sản xuất", "là công việc chăm sóc, thực hiện kiểm tra"], c: "MA=="},
     {q: "Phân loại theo công nghệ gia công gồm:", a: ["Gia công cơ khí không phoi và gia công cơ khí có phoi", "Gia công cơ khí không phoi và gia công cơ khí truyền thống", "Gia công cơ khí truyền thống và gia công cơ khí có phoi", "Gia công cơ khí truyền thống và gia công cơ khí hiện đại"], c: "MA=="},
     {q: "Gia công cơ khí không phoi là quá trình", a: ["Gia công bằng tia lửa điện", "Gia công mà có một lượng vật liệu bị cắt gọt bỏ đi", "Gia công mà khối lượng vật liệu vẫn được giữ nguyên", "Gia công bằng siêu âm"], c: "Mg=="},
-    {q: "Gia công cơ khí có phoi là quá trình", a: ["Gia công bằng tia lửa điện", "Gia công mà có một lượng vật liệu bị cắt gọt bỏ đi", "Gia công mà khối lượng vật liệu vẫn được giữ nguyên", "Gia công bằng siêu âm"], c: "MQ=="}
-    // ... Bạn có thể thêm tiếp các câu khác từ 11OT1B vào mảng này
+    {q: "Gia công cơ khí có phoi là quá trình", a: ["Gia công bằng tia lửa điện", "Gia công mà có một lượng vật liệu bị cắt gọt bỏ đi", "Gia công mà khối lượng vật liệu vẫn được giữ nguyên", "Gia công bằng siêu âm"], c: "MQ=="},
+    {q: "Sản phẩm của gia công cơ khí có phoi là:", a: ["Các chi tiết được chế tạo theo bản thiết kế", "Các sản phẩm thô nhẵn bề mặt thấp", "Vật liệu phôi ban đầu", "Máy móc xây dựng"], c: "MA=="},
+    {q: "Dụng cụ nào dùng để kẹp chặt phôi khi gia công trên máy tiện?", a: ["Ụ động", "Mâm cặp", "Bàn gá dao", "Trục chính"], c: "MQ=="}
 ];
 
-const DATA_P2 = [
-    {q: "Các phương pháp gia công không phoi bao gồm:", a: ["Đúc", "Tiện", "Rèn", "Hàn"], c: "WzAsIDIsIDNd"},
-    {q: "Vật liệu kim loại màu gồm những loại nào?", a: ["Đồng", "Thép", "Nhôm", "Nhựa"], c: "WzAsIDJd"},
-    {q: "Các tính chất của vật liệu cơ khí gồm:", a: ["Cơ học", "Vật lý", "Hóa học", "Tâm linh"], c: "WzAsIDEsIDJd"},
-    {q: "Thông số cơ bản của quá trình cắt gọt:", a: ["Vận tốc cắt", "Lượng chạy dao", "Chiều sâu cắt", "Màu sắc dao"], c: "WzAsIDEsIDJd"}
+const BANK_P2 = [
+    {q: "Các phương pháp gia công cơ khí không phoi bao gồm:", a: ["Đúc", "Tiện", "Rèn", "Hàn"], c: "WzAsIDIsIDNd"},
+    {q: "Vật liệu kim loại màu bao gồm các loại nào sau đây?", a: ["Đồng và hợp kim đồng", "Thép", "Nhôm và hợp kim nhôm", "Chất dẻo"], c: "WzAsIDJd"},
+    {q: "Các tính chất của vật liệu cơ khí bao gồm:", a: ["Tính chất cơ học", "Tính chất vật lý", "Tính chất hóa học", "Tính chất xã hội"], c: "WzAsIDEsIDJd"},
+    {q: "Các thông số cơ bản của quá trình cắt gọt là:", a: ["Vận tốc cắt", "Lượng chạy dao", "Chiều sâu cắt", "Độ ẩm không khí"], c: "WzAsIDEsIDJd"}
 ];
 
-let exam = [];
-let t = 15 * 60;
-let timer;
+let examData = [];
+let timerVal = 15 * 60;
+let countdown;
 
 function startTimer() {
-    timer = setInterval(() => {
-        t--;
-        let m = Math.floor(t/60), s = t%60;
-        document.getElementById('timer').innerText = `THỜI GIAN CÒN LẠI: ${m}:${s<10?'0':''}${s}`;
-        if(t<=0) { clearInterval(timer); grade(); }
+    countdown = setInterval(() => {
+        timerVal--;
+        let mins = Math.floor(timerVal/60), secs = timerVal%60;
+        document.getElementById('timer').innerText = `THỜI GIAN CÒN LẠI: ${mins}:${secs<10?'0':''}${secs}`;
+        if(timerVal <= 0) { clearInterval(countdown); alert("Hết giờ!"); grade(); }
     }, 1000);
 }
 
-function init() {
-    // 6 câu A, 6 câu B, 4 câu P2 - Tuyệt đối không thay đổi tỉ lệ
-    const sA = DATA_A.sort(() => 0.5-Math.random()).slice(0, 6);
-    const sB = DATA_B.sort(() => 0.5-Math.random()).slice(0, 6);
-    const sP2 = DATA_P2.sort(() => 0.5-Math.random()).slice(0, 4);
+function initQuiz() {
+    // 6 từ A, 6 từ B, 4 từ P2
+    const sA = BANK_A.sort(() => Math.random()-0.5).slice(0, 6);
+    const sB = BANK_B.sort(() => Math.random()-0.5).slice(0, 6);
+    const sP2 = BANK_P2.sort(() => Math.random()-0.5).slice(0, 4);
 
-    exam = [...sA, ...sB, ...sP2].map(item => {
-        const cDec = JSON.parse(atob(item.c));
-        const isM = Array.isArray(cDec);
-        let opts = item.a.map((txt, i) => ({ txt, isC: isM ? cDec.includes(i) : i === cDec }));
-        opts.sort(() => 0.5 - Math.random()); // Trộn đáp án
-        return { q: item.q, type: isM ? 'multi' : 'single', options: opts };
+    const part1 = [...sA, ...sB].sort(() => Math.random()-0.5);
+    examData = [...part1, ...sP2].map(item => {
+        const correctRaw = JSON.parse(atob(item.c));
+        const isMulti = Array.isArray(correctRaw);
+        let opts = item.a.map((txt, i) => ({ txt, isC: isMulti ? correctRaw.includes(i) : i === correctRaw }));
+        opts.sort(() => Math.random()-0.5);
+        return { q: item.q, type: isMulti?'multi':'single', options: opts };
     });
 
-    document.getElementById('content').innerHTML = exam.map((q, i) => `
-        <div class="q-box">
+    let html = '';
+    examData.forEach((q, i) => {
+        if(i===0) html += `<div class="section-header">PHẦN 1: CÂU HỎI CÓ 1 ĐÁP ÁN ĐÚNG (12 Câu)</div>`;
+        if(i===12) html += `<div class="section-header">PHẦN 2: CÂU HỎI CÓ NHIỀU PHƯƠNG ÁN TRẢ LỜI (4 Câu)</div>`;
+        html += `<div class="q-box">
             <p><strong>Câu ${i+1}:</strong> ${q.q}</p>
             ${q.options.map((o, oi) => `
                 <label class="opt">
@@ -107,31 +125,44 @@ function init() {
                     ${o.txt}
                 </label>
             `).join('')}
-        </div>
-    `).join('');
+        </div>`;
+    });
+    document.getElementById('content').innerHTML = html;
     startTimer();
 }
 
 function grade() {
-    clearInterval(timer);
-    let correct = 0;
-    let rev = '';
-    exam.forEach((q, i) => {
-        const sel = Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map(e => parseInt(e.value));
-        const ans = q.options.map((o, oi) => o.isC ? oi : null).filter(v => v !== null);
-        let ok = (q.type==='single') ? (sel.length===1 && q.options[sel[0]].isC) : (JSON.stringify(sel.sort())===JSON.stringify(ans.sort()));
-        if(ok) correct++;
-        rev += `<p>Câu ${i+1}: ${ok?'✅':'❌'} - Đáp án: <span class="correct">${ans.map(idx => q.options[idx].txt).join('; ')}</span></p>`;
+    clearInterval(countdown);
+    document.getElementById('timer').style.display = 'none';
+    let correctTotal = 0;
+    let reviewHtml = '';
+
+    examData.forEach((q, i) => {
+        const selected = Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map(e => parseInt(e.value));
+        const correctIndices = q.options.map((o, oi) => o.isC ? oi : null).filter(v => v !== null);
+        
+        let isRight = (q.type === 'single') 
+            ? (selected.length === 1 && q.options[selected[0]].isC)
+            : (JSON.stringify(selected.sort()) === JSON.stringify(correctIndices.sort()));
+
+        if(isRight) correctTotal++;
+
+        reviewHtml += `<div class="review-q">
+            <p><strong>Câu ${i+1}: ${q.q}</strong> ${isRight ? '✅' : '<span class="wrong-tag">❌</span>'}</p>
+            <p>Đáp án đúng: <span class="correct-ans">${correctIndices.map(idx => q.options[idx].txt).join('; ')}</span></p>
+            <p>Bạn đã chọn: <i>${selected.length > 0 ? selected.map(idx => q.options[idx].txt).join('; ') : 'Bỏ trống'}</i></p>
+        </div>`;
     });
+
     document.getElementById('quiz-ui').style.display = 'none';
     document.getElementById('res-ui').style.display = 'block';
-    document.getElementById('score').innerText = ((correct/16)*10).toFixed(1) + "/10";
-    document.getElementById('stats').innerText = `Đúng ${correct}/16 câu`;
-    document.getElementById('review').innerHTML = rev;
+    document.getElementById('score-val').innerText = ((correctTotal/16)*10).toFixed(1) + "/10";
+    document.getElementById('stats-val').innerText = `Kết quả: Đúng ${correctTotal} trên 16 câu.`;
+    document.getElementById('review-list').innerHTML = reviewHtml;
     window.scrollTo(0,0);
 }
 
-window.onload = init;
+window.onload = initQuiz;
 </script>
 </body>
 </html>
