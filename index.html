@@ -1,25 +1,161 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>AR Hiro Demo</title>
-
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.2.1/aframe/build/aframe-ar.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Trắc Nghiệm Công Nghệ 11 - Bảo Mật</title>
+    <style>
+        :root { --primary: #2563eb; --success: #16a34a; --error: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { text-align: center; border-bottom: 3px solid var(--primary); margin-bottom: 30px; padding-bottom: 10px; }
+        .section-title { background: #eff6ff; padding: 10px 15px; border-radius: 8px; margin: 25px 0 15px; border-left: 5px solid var(--primary); font-weight: bold; font-size: 1.1rem; }
+        .question-item { margin-bottom: 25px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; transition: 0.3s; }
+        .question-item:hover { border-color: var(--primary); background: #fcfcfc; }
+        .option-label { display: flex; align-items: center; padding: 12px; border: 1px solid #f1f5f9; border-radius: 8px; cursor: pointer; margin: 8px 0; transition: 0.2s; }
+        .option-label:hover { background: #f1f5f9; }
+        input { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; }
+        .btn-submit { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.2rem; font-weight: bold; cursor: pointer; margin-top: 30px; }
+        .btn-submit:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37,99,235,0.3); }
+        .result-box { display: none; text-align: center; padding: 30px; border-radius: 15px; background: white; border: 2px solid var(--success); }
+        .review-item { text-align: left; margin-top: 20px; padding: 15px; border-bottom: 1px solid #eee; }
+        .correct-text { color: var(--success); font-weight: bold; }
+        .score-val { font-size: 3.5rem; color: var(--primary); font-weight: 800; margin: 10px 0; }
+        .badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; color: white; margin-bottom: 10px; display: inline-block; }
+    </style>
 </head>
-
 <body>
-  <a-scene embedded arjs="sourceType: webcam;">
 
-    <!-- GẮN HIRO -->
-    <a-marker preset="hiro">
+<div class="container">
+    <div id="quiz-area">
+        <div class="header">
+            <h1>KIỂM TRA CÔNG NGHỆ 11</h1>
+            <p>Mã đề: Ngẫu nhiên | Cấu trúc: 6A + 6B + 4P2</p>
+        </div>
+        <div id="quiz-container"></div>
+        <button class="btn-submit" onclick="grade()">NỘP BÀI KIỂM TRA</button>
+    </div>
 
-      <!-- VẬT THỂ -->
-      <a-box position="0 0.5 0" color="red"></a-box>
+    <div id="result-area" class="result-box">
+        <h2>KẾT QUẢ BÀI LÀM</h2>
+        <div class="score-val" id="score-display">0/10</div>
+        <p id="stats-display" style="font-size: 1.2rem;"></p>
+        <button onclick="location.reload()" style="padding:10px 20px; margin-top:20px; cursor:pointer; border-radius:5px; border:1px solid #ccc;">Làm đề khác</button>
+        <div id="review-list"></div>
+    </div>
+</div>
 
-    </a-marker>
+<script>
+/**
+ * DỮ LIỆU ĐÃ MÃ HÓA CẤP ĐỘ 1 (BASE64)
+ * 'c' là chỉ số đáp án đúng đã được encode
+ */
+const BANK_A = [
+    {q: "Vai trò của cơ khí chế tạo trong giao thông vận tải là gì?", a: ["Máy MRI", "Tưới tự động", "Động cơ ô tô, xe máy", "Máy xay lúa"], c: "Mg=="},
+    {q: "Ai trực tiếp lắp đặt động cơ vào khung xe?", a: ["Công nhân lắp ráp", "Giám đốc", "Kỹ sư thiết kế", "Bảo vệ"], c: "MA=="},
+    {q: "Tính chất hoá học của vật liệu cơ khí là?", a: ["Tính cứng", "Dẫn điện", "Dẫn nhiệt", "Chịu ăn mòn"], c: "Mw=="},
+    {q: "Khả năng chống lại biến dạng dẻo hoặc phá hủy gọi là?", a: ["Tính dẫn nhiệt", "Tính đúc", "Độ bền", "Khối lượng riêng"], c: "Mg=="},
+    {q: "Vật liệu nhớ được hình dạng ban đầu?", a: ["Cơ tính biến thiên", "Nano", "Hợp kim nhớ hình", "Kim loại"], c: "Mg=="},
+    {q: "Phương pháp gia công có phoi là?", a: ["Tiện", "Đúc", "Rèn", "Hàn"], c: "MA=="},
+    {q: "Ưu điểm của phương pháp hàn?", a: ["Kém bền", "Hở", "Cong vênh", "Tiết kiệm kim loại"], c: "Mw=="},
+    {q: "Trên máy tiện, chi tiết gắn dao là?", a: ["Mâm cặp", "Ụ động", "Bàn gá dao", "Hộp tốc độ"], c: "Mg=="},
+    {q: "Trình tự sản xuất cơ khí đúng?", a: ["Phôi -> Gia công -> Xử lý -> Lắp ráp -> Đóng gói", "Gia công -> Phôi -> Kiểm tra", "Lắp ráp -> Gia công", "Phôi -> Lắp ráp -> Đóng gói"], c: "MA=="},
+    {q: "Hoạt động 'Xử lý và bảo vệ bề mặt' gồm?", a: ["Tiện, phay", "Đúc, rèn", "Sơn, mạ, phủ hóa chất", "Lắp bu lông"], c: "Mg=="},
+    {q: "Robot công nghiệp nổi bật nhất ở khả năng?", a: ["Suy nghĩ", "Làm việc theo chương trình", "Tốc độ ánh sáng", "Tự sửa chữa"], c: "MQ=="},
+    {q: "Robot xếp thùng lên pallet thuộc công đoạn nào?", a: ["Gia công", "Lắp ráp", "Kiểm tra", "Vận chuyển, xếp dỡ"], c: "Mw=="}
+];
 
-    <a-entity camera></a-entity>
-  </a-scene>
+const BANK_B = [
+    {q: "Gia công cơ khí là quá trình gì?", a: ["Chế tạo sản phẩm cơ khí", "Nghiên cứu thông số", "Tổ hợp chi tiết", "Bảo dưỡng máy"], c: "MA=="},
+    {q: "Gang là hợp kim của sắt và carbon với hàm lượng carbon?", a: ["Dưới 2.14%", "Trên 2.14%", "Bằng 0.1%", "Trên 6.67%"], c: "MQ=="},
+    {q: "Đặc điểm của nhựa nhiệt dẻo?", a: ["Không tái sinh", "Nóng chảy ở nhiệt độ thấp, tái sinh được", "Dẫn điện tốt", "Rất nặng"], c: "MQ=="},
+    {q: "Thép carbon thấp có tính chất gì?", a: ["Rất giòn", "Dẻo, dai nhưng độ cứng thấp", "Không thể rèn", "Dẫn nhiệt kém"], c: "MQ=="},
+    {q: "Phương pháp đúc là gì?", a: ["Rót kim loại lỏng vào khuôn", "Dùng ngoại lực ép kim loại", "Cắt bỏ lớp kim loại thừa", "Nối các chi tiết bằng nhiệt"], c: "MA=="},
+    {q: "Sản phẩm của gia công không phoi có đặc điểm?", a: ["Độ bóng cực cao", "Kích thước thô, cần gia công lại", "Luôn có hình trụ", "Rất nhẹ"], c: "MQ=="},
+    {q: "Nghề nghiệp thiết kế cơ khí yêu cầu trình độ?", a: ["Sơ cấp", "Trung cấp", "Đại học trở lên", "Không cần bằng cấp"], c: "Mg=="},
+    {q: "Vật liệu Nano có kích thước khoảng?", a: ["1 đến 100 nm", "1 đến 100 mm", "1 đến 100 cm", "1 m"], c: "MA=="}
+    // (Lưu ý: Bạn có thể thêm tiếp các câu từ 11OT1B vào đây theo mẫu này)
+];
+
+const BANK_P2 = [
+    {q: "Các phương pháp gia công không phoi bao gồm?", a: ["Đúc", "Tiện", "Rèn", "Hàn"], c: "WzAsIDIsIDNd"},
+    {q: "Vật liệu kim loại bao gồm các loại nào sau đây?", a: ["Gang", "Thép", "Đồng", "Nhựa"], c: "WzAsIDEsIDJd"},
+    {q: "Các tính chất của vật liệu cơ khí bao gồm?", a: ["Tính chất cơ học", "Tính chất vật lý", "Tính chất hóa học", "Tính chất tâm linh"], c: "WzAsIDEsIDJd"},
+    {q: "Các loại máy công cụ phổ biến trong cơ khí là?", a: ["Máy tiện", "Máy phay", "Máy khoan", "Máy in văn phòng"], c: "WzAsIDEsIDJd"},
+    {q: "Ưu điểm của vật liệu Composite là?", a: ["Nhẹ", "Độ bền riêng cao", "Chịu nhiệt tốt", "Dễ bị ăn mòn"], c: "WzAsIDEsIDJd"}
+];
+
+let exam = [];
+
+function shuffle(a) { return a.sort(() => Math.random() - 0.5); }
+
+function init() {
+    // Lấy 6A, 6B, 4P2
+    const sA = shuffle([...BANK_A]).slice(0, 6);
+    const sB = shuffle([...BANK_B]).slice(0, 6);
+    const sP2 = shuffle([...BANK_P2]).slice(0, 4);
+
+    const part1 = shuffle([...sA, ...sB]);
+    exam = [...part1, ...sP2].map(item => {
+        const decodedAns = JSON.parse(atob(item.c));
+        const isMulti = Array.isArray(decodedAns);
+        let opts = item.a.map((t, i) => ({
+            t, 
+            isCorrect: isMulti ? decodedAns.includes(i) : i === decodedAns
+        }));
+        shuffle(opts);
+        return { q: item.q, type: isMulti ? 'multi' : 'single', options: opts };
+    });
+    render();
+}
+
+function render() {
+    let h = '';
+    exam.forEach((q, i) => {
+        if(i===0) h += `<div class="section-title">PHẦN I: TRẮC NGHIỆM MỘT ĐÁP ÁN</div>`;
+        if(i===12) h += `<div class="section-title">PHẦN II: TRẮC NGHIỆM NHIỀU ĐÁP ÁN</div>`;
+        h += `<div class="question-item">
+            <span class="badge" style="background:${q.type==='single'?'#3b82f6':'#f59e0b'}">${q.type==='single'?'Một đáp án':'Nhiều đáp án'}</span>
+            <p><strong>Câu ${i+1}:</strong> ${q.q}</p>
+            ${q.options.map((o, oi) => `
+                <label class="option-label">
+                    <input type="${q.type==='single'?'radio':'checkbox'}" name="q${i}" value="${oi}">
+                    ${o.t}
+                </label>
+            `).join('')}
+        </div>`;
+    });
+    document.getElementById('quiz-container').innerHTML = h;
+}
+
+function grade() {
+    let correct = 0;
+    let review = '';
+    exam.forEach((q, i) => {
+        const selected = Array.from(document.querySelectorAll(`input[name="q${i}"]:checked`)).map(e => parseInt(e.value));
+        const correctIndices = q.options.map((o, oi) => o.isCorrect ? oi : null).filter(v => v !== null);
+        
+        let isRight = (q.type === 'single') 
+            ? (selected.length === 1 && q.options[selected[0]].isCorrect)
+            : (JSON.stringify(selected.sort()) === JSON.stringify(correctIndices.sort()));
+
+        if(isRight) correct++;
+        review += `<div class="review-item">
+            <p><strong>Câu ${i+1}:</strong> ${isRight ? '✅ Đúng' : '❌ Sai'}</p>
+            <p>Đáp án đúng: <span class="correct-text">${correctIndices.map(idx => q.options[idx].t).join('; ')}</span></p>
+        </div>`;
+    });
+
+    const score = (correct / 16) * 10;
+    document.getElementById('quiz-area').style.display = 'none';
+    document.getElementById('result-area').style.display = 'block';
+    document.getElementById('score-display').innerText = score.toFixed(1) + "/10";
+    document.getElementById('stats-display').innerText = `Bạn trả lời đúng ${correct} trên tổng số 16 câu.`;
+    document.getElementById('review-list').innerHTML = review;
+    window.scrollTo(0,0);
+}
+
+window.onload = init;
+</script>
 </body>
 </html>
